@@ -58,6 +58,13 @@ vec4  gdv( ivec2 of, sampler2D tx ) {
 	of[0] 	= (of[0] + textureSize(tx,0)[0]) & (textureSize(tx,0)[0]-1);
 	of[1] 	= (of[1] + textureSize(tx,0)[1]) & (textureSize(tx,0)[1]-1);
 	return 	texelFetch( tx, of, 0); }
+	
+vec4  gdvNoWrap( ivec2 of, sampler2D tx ) {
+	of 		= ivec2(gl_FragCoord) + of;
+	of[0] 	= (of[0] + textureSize(tx,0)[0]) & (textureSize(tx,0)[0]-1);
+	if (of[1] >= textureSize(tx,0)[1]) return vec4(1.0, 1.0, 1.0, 1.0);
+	//of[1] 	= (of[1] + textureSize(tx,0)[1]) & (textureSize(tx,0)[1]-1);
+	return 	texelFetch( tx, of, 0); }
 
 vec4[2] nbhd( vec2 r, sampler2D tx ) {
 //	Precision limit of signed float32 for [n] neighbors in a 16 bit texture (symmetry preservation)
@@ -72,6 +79,26 @@ vec4[2] nbhd( vec2 r, sampler2D tx ) {
 			float	d = round(sqrt(i*i+j*j));
 			float	w = 1.0;
 			if( d <= r[0] && d > r[1] ) {
+					 b 	+= w * psn * 4.0;
+				vec4 t0  = gdv( ivec2( i, j), tx ) * w * psn; a += t0 - fract(t0);
+				vec4 t1  = gdv( ivec2( j,-i), tx ) * w * psn; a += t1 - fract(t1);
+				vec4 t2  = gdv( ivec2(-i,-j), tx ) * w * psn; a += t2 - fract(t2);
+				vec4 t3  = gdv( ivec2(-j, i), tx ) * w * psn; a += t3 - fract(t3); } } }
+	return vec4[2](a, b); }
+
+vec4[2] nbhdRect( vec2 r, sampler2D tx ) {
+//	Precision limit of signed float32 for [n] neighbors in a 16 bit texture (symmetry preservation)
+	uint	chk = 2147483648u /
+			(	( 	uint( r[0]*r[0]*PI + r[0]*PI + PI	)
+				- 	uint( r[1]*r[1]*PI + r[1]*PI		) ) * 128u );
+	float	psn = (chk >= 65536u) ? 65536.0 : float(chk);
+	vec4	a = vec4(0.0,0.0,0.0,0.0);
+	vec4 	b = vec4(0.0,0.0,0.0,0.0);
+	for(float i = 0.0; i <= r[0]; i++) {
+		for(float j = 1.0; j <= r[0]; j++) {
+			float	d = round(sqrt(i*i+j*j));
+			float	w = 1.0;
+			if( true ) {
 					 b 	+= w * psn * 4.0;
 				vec4 t0  = gdv( ivec2( i, j), tx ) * w * psn; a += t0 - fract(t0);
 				vec4 t1  = gdv( ivec2( j,-i), tx ) * w * psn; a += t1 - fract(t1);
@@ -257,42 +284,73 @@ void main() {
 
 
 
-//	CGOL TEST OVERRIDE
-/*
+//	SAND TEST OVERRIDE
+
 	res_c = gdv( ivec2(0, 0), txdata );
-	vec4[2] cgol_val = nbhd( vec2(1.0,0.0), txdata );
-	vec4 sum = cgol_val[0];
-	vec4 tot = cgol_val[1];
-	vec4 res = sum / tot;
+	vec4 above = gdvNoWrap(ivec2(0, -1), txdata);
+	vec4 below = gdvNoWrap(ivec2(0, 1), txdata);
+	
+	vec4 belowRight = gdvNoWrap(ivec2(1, 1), txdata);
+	vec4 belowLeft = gdvNoWrap(ivec2(-1, 1), txdata);
+	
+	vec4 aboveRight = gdvNoWrap(ivec2(1, -1), txdata);
+	vec4 aboveLeft = gdvNoWrap(ivec2(-1, -1), txdata);
 
-	if(res_c[0] >= 0.5 ) { res_c[0] = 1.0; }
-	if(res_c[0] <  0.5 ) { res_c[0] = 0.0; }
+	// Dropper
+	if (above[1] > 0.0 || above[2] > 0.0) above[0] = 1.0;
+	if (res_c[1] > 0.0 || res_c[2] > 0.0) res_c[0] = 1.0;
 
-	if(res_c[1] >= 0.5 ) { res_c[1] = 1.0; }
-	if(res_c[1] <  0.5 ) { res_c[1] = 0.0; }
+	//================//
+	// ELEMENT - SAND //
+	//================//
+	if (res_c[0] >= 0.5) {
+		
+		// Fall
+		if (below[0] < 0.5) res_c[0] = 0.0;
 
-	if(res_c[2] >= 0.5 ) { res_c[2] = 1.0; }
-	if(res_c[2] <  0.5 ) { res_c[2] = 0.0; }
+		// Slide Right
+		else if (belowRight[0] < 0.5) res_c[0] = 0.0;
 
-	if(res_c[3] >= 0.5 ) { res_c[3] = 1.0; }
-	if(res_c[3] <  0.5 ) { res_c[3] = 0.0; }
+		// Slide Left
+		else if (belowLeft[0] < 0.5) res_c[0] = 0.0;
 
-	if(res[0] <= (1.0 / 8.0)) { res_c[0] = 0.0; }
-	if(res[0] >= (4.0 / 8.0)) { res_c[0] = 0.0; }
-	if(res[0] >= (3.0 / 8.0) && res[0] <= (3.0 / 8.0) ) { res_c[0] = 1.0; }
+	}
 
-	if(res[1] <= (1.0 / 8.0)) { res_c[1] = 0.0; }
-	if(res[1] >= (4.0 / 8.0)) { res_c[1] = 0.0; }
-	if(res[1] >= (3.0 / 8.0)   && res[1] <= (3.0 / 8.0) ) { res_c[1] = 1.0; }
+	//=================//
+	// ELEMENT - EMPTY //
+	//=================//
+	// Create
+	else if (res_c[0] < 0.5) {
+		
+		// Fall
+		if (above[0] >= 0.5) res_c[0] = 1.0;
+		
+		// Slide Right
+		else if (aboveLeft[0] >= 0.5) res_c[0] = 1.0;
+		
+		// Slide Left
+		else if (aboveRight[0] >= 0.5) res_c[0] = 1.0;
 
-	if(res[2] <= (1.0 / 8.0)) { res_c[2] = 0.0; }
-	if(res[2] >= (4.0 / 8.0)) { res_c[2] = 0.0; }
-	if(res[2] >= (3.0 / 8.0)   && res[2] <= (3.0 / 8.0) ) { res_c[2] = 1.0; }
+	}
 
-	if(res[3] <= (1.0 / 8.0)) { res_c[3] = 0.0; }
-	if(res[3] >= (4.0 / 8.0)) { res_c[3] = 0.0; }
-	if(res[3] >= (3.0 / 8.0)   && res[3] <= (3.0 / 8.0) ) { res_c[3] = 1.0; }
-/**/
+
+	//=============//
+	// SLIDE RIGHT //
+	//=============//
+	
+	// Colour
+	if(res_c[0] >= 0.5 ) {
+		res_c[0] = 1.0;
+		res_c[1] = 204.0 / 255.0;
+		res_c[2] = 70.0 / 255.0;
+		res_c[3] = 1.0;
+	}
+	else {
+		res_c[0] = 0.0;
+		res_c[1] = 0.0;
+		res_c[2] = 0.0;
+		res_c[3] = 0.0;
+	}
 
 //	----    ----    ----    ----    ----    ----    ----    ----
 //	Shader Output
