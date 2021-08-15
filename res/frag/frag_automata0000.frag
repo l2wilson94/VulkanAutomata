@@ -289,6 +289,10 @@ void main() {
 	res_c = gdv( ivec2(0, 0), txdata );
 	vec4 above = gdvNoWrap(ivec2(0, -1), txdata);
 	vec4 below = gdvNoWrap(ivec2(0, 1), txdata);
+
+	vec4 left = gdvNoWrap(ivec2(-1, 0), txdata);
+	vec4 right = gdvNoWrap(ivec2(1, 0), txdata);
+	vec4 right2 = gdvNoWrap(ivec2(2, 0), txdata);
 	
 	vec4 belowRight = gdvNoWrap(ivec2(1, 1), txdata);
 	vec4 belowLeft = gdvNoWrap(ivec2(-1, 1), txdata);
@@ -326,10 +330,10 @@ void main() {
 		if (above[0] >= 0.5) res_c[0] = 1.0;
 		
 		// Slide Right
-		else if (aboveLeft[0] >= 0.5) res_c[0] = 1.0;
+		else if (aboveLeft[0] >= 0.5 && left[0] >= 0.5) res_c[0] = 1.0;
 		
 		// Slide Left
-		else if (aboveRight[0] >= 0.5) res_c[0] = 1.0;
+		else if (aboveRight[0] >= 0.5 && right[0] >= 0.5 && right2[0] >= 0.5) res_c[0] = 1.0;
 
 	}
 	
