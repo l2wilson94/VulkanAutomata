@@ -6,7 +6,10 @@ You could use this command to do it: `git clone --branch VKAutoGLFW https://gith
 ## GLFW
 Download and install the GLFW development library.<br>
 You need to download the 32-bit binaries so that it works with MinGW.<br>
-https://www.glfw.org/download
+https://www.glfw.org/download<br>
+
+Also, find `glfw3.dll` and place it into the `app` folder.
+
 
 ## Vulkan
 Download and install the Vulkan SDK.<br>
@@ -32,10 +35,6 @@ g++ VulkanAutomataGLFW.cpp -fconcepts -L C:\glfw-3.3.4.bin.WIN32\lib-mingw -lglf
 Now you need to edit `make.ps1` with the locations of your Vulkan and GLFW installs.<br>
 For example, do you see where it says `C:\glfw-3.3.4.bin.WIN32\lib-mingw`? Change that to where your GLFW install is.<br>
 Do that for all four locations.
-
-## Size?
-I changed `size` on line 2008 to `size_t`.<br>
-https://github.com/Slackermanz/VulkanAutomata/blob/c3f471a25da4ee5d46f177f7321fd0590cab6883/VulkanAutomataGLFW.cpp#L2008
 
 ## Go!
 Run `make.js` in powershell with a command like this: `./make.ps1`
