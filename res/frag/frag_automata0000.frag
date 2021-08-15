@@ -332,11 +332,6 @@ void main() {
 		else if (aboveRight[0] >= 0.5) res_c[0] = 1.0;
 
 	}
-
-
-	//=============//
-	// SLIDE RIGHT //
-	//=============//
 	
 	// Colour
 	if(res_c[0] >= 0.5 ) {
