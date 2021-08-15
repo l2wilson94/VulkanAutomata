@@ -299,40 +299,51 @@ void main() {
 	
 	vec4 aboveRight = gdvNoWrap(ivec2(1, -1), txdata);
 	vec4 aboveLeft = gdvNoWrap(ivec2(-1, -1), txdata);
-
+	
 	// Dropper
 	if (above[1] > 0.0 || above[2] > 0.0) above[0] = 1.0;
 	if (res_c[1] > 0.0 || res_c[2] > 0.0) res_c[0] = 1.0;
-
+	
 	//================//
 	// ELEMENT - SAND //
 	//================//
 	if (res_c[0] >= 0.5) {
 		
 		// Fall
+		// .@.
+		// ._.
 		if (below[0] < 0.5) res_c[0] = 0.0;
-
+		
 		// Slide Right
+		// .@.
+		// .S_
 		else if (belowRight[0] < 0.5) res_c[0] = 0.0;
-
+		
 		// Slide Left
+		// .@.
+		// _SS
 		else if (belowLeft[0] < 0.5) res_c[0] = 0.0;
-
+		
 	}
-
+	
 	//=================//
 	// ELEMENT - EMPTY //
 	//=================//
-	// Create
 	else if (res_c[0] < 0.5) {
 		
 		// Fall
+		// .S.
+		// .@.
 		if (above[0] >= 0.5) res_c[0] = 1.0;
 		
 		// Slide Right
+		// .S_
+		// .S@
 		else if (aboveLeft[0] >= 0.5 && left[0] >= 0.5) res_c[0] = 1.0;
 		
 		// Slide Left
+		// _S.
+		// @SS
 		else if (aboveRight[0] >= 0.5 && right[0] >= 0.5 && right2[0] >= 0.5) res_c[0] = 1.0;
 
 	}
